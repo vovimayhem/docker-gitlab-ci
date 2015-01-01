@@ -1,0 +1,31 @@
+redis:
+  image: redis:latest
+  ports:
+    - "6379:6379"
+postgres:
+  image: postgres:9.3
+  ports:
+    - "5432:5432"
+  volumes:
+    - test-volumes/postgres/data:/var/lib/postgresql/data
+  environment:
+    LC_ALL: C.UTF-8
+app: &app
+  # build: .
+  image: vovimayhem/gitlab-ci:latest
+  ports:
+    - "5000:5000"
+  ######################################
+  # With linked containers, Docker writes entries to the container's /etc/hosts.
+  # We'll try here naming the entries docker will insert into the container's /etc/hosts,
+  # so we can use more familiar URL's for our app: (See this container's environment section below)
+  links:
+    - redis:redis.gitlab-ci.local
+    - postgres:postgres.gitlab-ci.local
+  environment:
+    DATABASE_URL: postgres://postgres@postgres.gitlab-ci.local:5432/gitlab_ci?pool=50&encoding=unicode
+    ##### RACK/RAILS:
+    RACK_ENV: production
+    RAILS_ENV: production
+    ##### Redis:
+    REDIS_URL: redis://redis.gitlab-ci.local:6379

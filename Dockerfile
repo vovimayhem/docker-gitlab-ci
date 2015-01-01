@@ -104,20 +104,21 @@ ENV GITLAB_CI_VERSION 5.3.0
 ENV GITLAB_CI_SOURCE_URL https://gitlab.com/gitlab-org/gitlab-ci/repository/archive.tar.bz2?ref=v$GITLAB_CI_VERSION
 RUN mkdir -p $GITLAB_CI_SOURCE_DIR && \
 curl -SL $GITLAB_CI_SOURCE_URL | tar -xjC $GITLAB_CI_SOURCE_DIR --strip-components=1 && \
-cd $GITLAB_CI_SOURCE_DIR \
+cd $GITLAB_CI_SOURCE_DIR && \
+echo "gem 'rails_stdout_logging'" >> Gemfile && \
 bundle install --without development && \
 rm -rf config/database.* && \
 mv config/application.yml.example config/application.yml && \
 mv config/unicorn.rb.example config/unicorn.rb && \
-rm -r config/*.example* && \
-rm config/initializers/3_sidekiq.rb && \
+rm -r config/*.example* config/initializers/3_sidekiq.rb  config/unicorn.rb && \
 mkdir -p $GEM_HOME && \
 bundle config --global path "$GEM_HOME" && \
 bundle config --global bin "$GEM_HOME/bin" && \
 bundle install --without development test
 
-ADD database.yml $GITLAB_CI_SOURCE_DIR/config/database.yml
-ADD sidekiq.rb $GITLAB_CI_SOURCE_DIR/config/initializers/3_sidekiq.rb
+ADD config/database.yml             $GITLAB_CI_SOURCE_DIR/config/database.yml
+ADD config/initializers/sidekiq.rb  $GITLAB_CI_SOURCE_DIR/config/initializers/3_sidekiq.rb
+ADD config/unicorn.rb               $GITLAB_CI_SOURCE_DIR/config/unicorn.rb
 
 WORKDIR $GITLAB_CI_SOURCE_DIR
 
@@ -125,34 +126,34 @@ USER root
 
 RUN chown -R gitlab_ci:gitlab_ci config/
 
-# ################################################################################
-# # 4: Remove build dependencies:
-# RUN apt-get purge --auto-remove -y \
-#       autoconf \
-#       checkinstall \
-#       g++ \
-#       gcc \
-#       isomd5sum \
-#       libc6-dev \
-#       libcurl4-openssl-dev \
-#       libffi-dev\
-#       libgdbm-dev \
-#       libicu-dev \
-#       libmysqlclient-dev \
-#       libncurses5-dev \
-#       libpq-dev \
-#       libreadline6-dev \
-#       libreadline-dev \
-#       libssl-dev \
-#       libxml2-dev \
-#       libxslt-dev \
-#       libyaml-dev \
-#       make \
-#       patch \
-#       zlib1g-dev
-#
-# ################################################################################
-# # 5: Final Setup
+################################################################################
+# 4: Remove build dependencies:
+RUN apt-get purge --auto-remove -y \
+      autoconf \
+      checkinstall \
+      g++ \
+      gcc \
+      isomd5sum \
+      libc6-dev \
+      libcurl4-openssl-dev \
+      libffi-dev\
+      libgdbm-dev \
+      libicu-dev \
+      libmysqlclient-dev \
+      libncurses5-dev \
+      libpq-dev \
+      libreadline6-dev \
+      libreadline-dev \
+      libssl-dev \
+      libxml2-dev \
+      libxslt-dev \
+      libyaml-dev \
+      make \
+      patch \
+      zlib1g-dev
+
+################################################################################
+# 5: Final Setup
 
 USER gitlab_ci
 

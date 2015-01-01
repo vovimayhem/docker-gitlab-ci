@@ -83,7 +83,8 @@ autoconf && \
 make -j"$(nproc)" && \
 make install && \
 export PATH=$RUBY_ROOT/bin:$PATH && \
-gem install bundler
+gem install bundler && \
+rm -rf $RUBY_SOURCE_DIR
 
 ENV PATH $RUBY_ROOT/bin:$PATH
 
@@ -106,15 +107,14 @@ RUN mkdir -p $GITLAB_CI_SOURCE_DIR && \
 curl -SL $GITLAB_CI_SOURCE_URL | tar -xjC $GITLAB_CI_SOURCE_DIR --strip-components=1 && \
 cd $GITLAB_CI_SOURCE_DIR && \
 echo "gem 'rails_stdout_logging'" >> Gemfile && \
-bundle install --without development && \
-rm -rf config/database.* && \
-mv config/application.yml.example config/application.yml && \
-mv config/unicorn.rb.example config/unicorn.rb && \
-rm -r config/*.example* config/initializers/3_sidekiq.rb  config/unicorn.rb && \
 mkdir -p $GEM_HOME && \
 bundle config --global path "$GEM_HOME" && \
 bundle config --global bin "$GEM_HOME/bin" && \
-bundle install --without development test
+bundle install --without development test && \
+rm -rf config/database.* && \
+mv config/application.yml.example config/application.yml && \
+mv config/unicorn.rb.example config/unicorn.rb && \
+rm -r config/*.example* config/initializers/3_sidekiq.rb  config/unicorn.rb
 
 ADD config/database.yml             $GITLAB_CI_SOURCE_DIR/config/database.yml
 ADD config/initializers/sidekiq.rb  $GITLAB_CI_SOURCE_DIR/config/initializers/3_sidekiq.rb
